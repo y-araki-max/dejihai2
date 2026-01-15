@@ -1,0 +1,76 @@
+// Prisma schema for Shipyard Schedule Management
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Ship {
+  id          String   @id @default(cuid())
+  shipNumber  String   @unique  // e.g., "S6313"
+  name        String?
+  blocks      Block[]
+  tasks       DeliveryTask[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Block {
+  id          String   @id @default(cuid())
+  shipId      String
+  ship        Ship     @relation(fields: [shipId], references: [id], onDelete: Cascade)
+  section     String   // 区画 (e.g., "AP", "AS", "BRI")
+  largeBlock  String   // 大組 (e.g., "AP1", "2D1P")
+  mediumBlock String   // 中組 (e.g., "AP1", "AS1P")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([shipId, section, largeBlock, mediumBlock])
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  code        String   @unique  // e.g., "1A1", "1A2", "2A1", "先付"
+  name        String
+  displayOrder Int
+  tasks       DeliveryTask[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model DeliveryTask {
+  id              String    @id @default(cuid())
+  shipId          String?
+  ship            Ship?     @relation(fields: [shipId], references: [id], onDelete: SetNull)
+  
+  // Master data or free-form input
+  blockInfo       String?   // For master-based: "S6313 - AP1 - AP1"
+  freeFormTitle   String?   // For non-master items: "ゴミ出し", "清掃", etc.
+  
+  // Delivery information
+  requestedDate   DateTime
+  requestedTime   String    // e.g., "08:00", "14:00"
+  locationId      String
+  location        Location  @relation(fields: [locationId], references: [id])
+  
+  // Schedule adjustment (set by administrator)
+  scheduledDate   DateTime?
+  scheduledStartTime String? // e.g., "08:00"
+  scheduledEndTime   String? // e.g., "10:00"
+  duration        Int?      // Duration in minutes
+  
+  // Extended notes (detailed text like "(08)N6s 5F部材 8:00")
+  notes           String?   // Large text area for details
+  specialStatus   String?   // e.g., "㊏" (Saturday carryover)
+  personInCharge  String?   // Name of the person in charge (担当者名)
+  
+  // Metadata
+  status          String    @default("PENDING") // PENDING, SCHEDULED, COMPLETED
+  createdBy       String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
