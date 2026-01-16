@@ -131,14 +131,17 @@ export default function SchedulePage() {
         const taskId = active.id as string;
         const dropId = over.id as string;
 
-        // Parse the drop target ID: format is "locationId_timeSlot"
-        const [locationId, timeSlot] = dropId.split('_');
+        const [dropLocationId, timeSlot] = dropId.split('_');
 
-        if (!locationId || !timeSlot) return;
+        if (!dropLocationId || !timeSlot) return;
 
-        // Calculate new end time based on existing duration
         const task = tasks.find(t => t.id === taskId);
-        const duration = task?.duration || 60;
+        if (!task) return;
+
+        // Block vertical movement (Location change)
+        if (dropLocationId !== task.location.id) return;
+
+        const duration = task.duration || 60;
 
         const [hours, minutes] = timeSlot.split(':').map(Number);
         const startTotalMins = hours * 60 + minutes;
@@ -149,10 +152,10 @@ export default function SchedulePage() {
         const scheduledEndTime = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
 
         try {
-            // Optimistic update
+            // Optimistic update - Maintain original status (don't force SCHEDULED)
             setTasks(prev => prev.map(t =>
                 t.id === taskId
-                    ? { ...t, location: { ...t.location, id: locationId }, scheduledStartTime: timeSlot, scheduledEndTime, status: 'SCHEDULED' }
+                    ? { ...t, scheduledStartTime: timeSlot, scheduledEndTime }
                     : t
             ));
 
@@ -160,11 +163,11 @@ export default function SchedulePage() {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    locationId,
+                    locationId: dropLocationId, // Should be same
                     scheduledDate: selectedDate,
                     scheduledStartTime: timeSlot,
                     scheduledEndTime,
-                    status: 'SCHEDULED',
+                    // DO NOT update status here to maintain original color
                 }),
             });
 
@@ -306,16 +309,11 @@ export default function SchedulePage() {
 
     const getTaskDisplay = (task: Task) => {
         const shipNumber = task.ship?.shipNumber ? task.ship.shipNumber.replace('S', '') : '';
-        const blockParts = task.blockInfo ? task.blockInfo.split(' - ') : [];
-        // [Ship, Section, LargeBlock, MediumBlock]
-        const section = blockParts[1] || '';
-        const blockName = blockParts[blockParts.length - 1] || task.freeFormTitle || '';
-        const person = task.personInCharge || '';
+        // blockInfo format: "ShipNumber - BlockName"
+        const blockName = task.blockInfo ? task.blockInfo.split(' - ').pop() || task.blockInfo : (task.freeFormTitle || '');
         return {
             shipNumber,
-            section,
             blockName,
-            person,
         };
     };
 
@@ -476,15 +474,14 @@ export default function SchedulePage() {
                 }}
             >
                 <div className="task-card-header" style={{ fontSize: '12px', pointerEvents: 'none' }}>
-                    <div style={{ fontWeight: 700, display: 'flex', flexWrap: 'wrap', gap: '2px', overflow: 'hidden' }}>
+                    <div style={{ fontWeight: 700, display: 'flex', flexWrap: 'wrap', gap: '4px', overflow: 'hidden' }}>
                         {task.specialStatus && (
                             <span className="task-card-special-status" style={{ fontSize: '14px' }}>{task.specialStatus}</span>
                         )}
                         <span style={{ color: '#ffd700' }}>{display.shipNumber && `(${display.shipNumber})`}</span>
-                        <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '0 4px', borderRadius: '2px' }}>{display.section}</span>
+                        <span>/</span>
                         <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{display.blockName}</span>
                     </div>
-                    <div style={{ fontSize: '10px', opacity: 0.8 }}>{display.person}</div>
                 </div>
                 <div
                     className="task-card-resize-handle"
@@ -628,9 +625,10 @@ export default function SchedulePage() {
                             >
                                 <div className="task-card-header">
                                     {activeTask.specialStatus && <span className="task-card-special-status">{activeTask.specialStatus}</span>}
-                                    <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontSize: '0.9em' }}>{getTaskDisplay(activeTask).person}</span>
-                                        <span style={{ color: '#ffd700' }}>{getTaskDisplay(activeTask).shipNumber}</span>
+                                    <div style={{ fontWeight: 700, fontSize: '16px', display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                        <span style={{ color: '#ffd700' }}>({getTaskDisplay(activeTask).shipNumber})</span>
+                                        <span>/</span>
+                                        <span>{getTaskDisplay(activeTask).blockName}</span>
                                     </div>
                                 </div>
                             </div>

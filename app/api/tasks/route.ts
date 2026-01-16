@@ -69,7 +69,6 @@ export async function POST(request: NextRequest) {
                 shipId: body.shipId || null,
                 blockInfo: body.blockInfo || null,
                 freeFormTitle: body.freeFormTitle || null,
-                personInCharge: body.personInCharge || null, // Added field
                 requestedDate: new Date(body.requestedDate),
                 requestedTime: body.requestedTime,
                 locationId: body.locationId,

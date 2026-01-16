@@ -104,12 +104,10 @@ export default function ViewPage() {
 
     const getTaskDisplay = (task: Task) => {
         const shipNumber = task.ship?.shipNumber ? task.ship.shipNumber.replace('S', '') : '';
-        const blockParts = task.blockInfo ? task.blockInfo.split(' - ') : [];
-        const section = blockParts[1] || '';
-        const blockName = blockParts[blockParts.length - 1] || task.freeFormTitle || '';
+        // blockInfo format: "ShipNumber - BlockName"
+        const blockName = task.blockInfo ? task.blockInfo.split(' - ').pop() || task.blockInfo : (task.freeFormTitle || '');
         return {
             shipNumber,
-            section,
             blockName,
         };
     };
@@ -205,7 +203,7 @@ export default function ViewPage() {
                 const taskAtTime = locTasks.find(t => (t.scheduledStartTime || t.requestedTime) === time);
                 if (taskAtTime) {
                     const display = getTaskDisplay(taskAtTime);
-                    row.push(`(${display.shipNumber}) ${display.section} ${display.blockName}`);
+                    row.push(`(${display.shipNumber}) / ${display.blockName}`);
                 } else {
                     row.push('');
                 }
@@ -261,9 +259,6 @@ export default function ViewPage() {
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 'var(--spacing-sm)' }}>
                     <button onClick={handleExportExcel} style={{ backgroundColor: '#27ae60' }}>
                         📊 Excel保存
-                    </button>
-                    <button onClick={() => window.print()} style={{ backgroundColor: 'var(--color-accent-primary)' }}>
-                        🖨️ PDFで保存/印刷
                     </button>
                     <button onClick={fetchTasks} className="secondary">
                         更新
@@ -364,7 +359,7 @@ export default function ViewPage() {
                                                             <span className="task-card-special-status" style={{ fontSize: '14px' }}>{task.specialStatus}</span>
                                                         )}
                                                         <span style={{ color: '#ffd700' }}>{display.shipNumber && `(${display.shipNumber})`}</span>
-                                                        <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '0 4px', borderRadius: '2px' }}>{display.section}</span>
+                                                        <span>/</span>
                                                         <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{display.blockName}</span>
                                                     </div>
                                                 </div>

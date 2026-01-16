@@ -30,11 +30,8 @@ export default function RequestPage() {
     const [keepInputting, setKeepInputting] = useState(false); // 続けて入力するかどうか
 
     // Form fields
-    const [personInCharge, setPersonInCharge] = useState(''); // New field
     const [freeFormTitle, setFreeFormTitle] = useState('');
-    const [selectedSection, setSelectedSection] = useState('');
-    const [selectedLargeBlock, setSelectedLargeBlock] = useState('');
-    const [selectedMediumBlock, setSelectedMediumBlock] = useState('');
+    const [selectedBlock, setSelectedBlock] = useState('');
     const [requestedDate, setRequestedDate] = useState('');
     const [requestedTime, setRequestedTime] = useState('08:00');
     const [locationId, setLocationId] = useState('');
@@ -78,9 +75,7 @@ export default function RequestPage() {
                     const res = await fetch(`/api/blocks?shipId=${selectedShipId}`);
                     const data = await res.json();
                     setBlockData(data);
-                    setSelectedSection('');
-                    setSelectedLargeBlock('');
-                    setSelectedMediumBlock('');
+                    setSelectedBlock('');
                 } catch (error) {
                     console.error('Error fetching blocks:', error);
                 }
@@ -98,20 +93,15 @@ export default function RequestPage() {
         try {
             let blockInfo = null;
 
-            if (!isFreeForm && selectedShipId) {
+            if (!isFreeForm && selectedShipId && selectedBlock) {
                 const ship = ships.find(s => s.id === selectedShipId);
-                // Construct block info even if partial
-                const parts = [ship?.shipNumber, selectedSection, selectedLargeBlock, selectedMediumBlock].filter(Boolean);
-                if (parts.length > 0) {
-                    blockInfo = parts.join(' - ');
-                }
+                blockInfo = `${ship?.shipNumber || ''} - ${selectedBlock}`.trim();
             }
 
             const payload = {
                 shipId: isFreeForm ? null : (selectedShipId || null),
                 blockInfo,
                 freeFormTitle: isFreeForm ? freeFormTitle : null,
-                personInCharge: personInCharge || null,
                 requestedDate,
                 requestedTime,
                 locationId,
@@ -131,12 +121,10 @@ export default function RequestPage() {
             // フォームのリセット
             setFreeFormTitle('');
             setSelectedShipId('');
-            setSelectedSection('');
-            setSelectedLargeBlock('');
-            setSelectedMediumBlock('');
+            setSelectedBlock('');
             setNotes('');
-            setLocationId(''); // 追加
-            setRequestedTime(''); // 追加
+            setLocationId('');
+            setRequestedTime('');
 
             // 続けて入力しない場合は、トップへ戻すか、メッセージを維持する
             if (!keepInputting) {
@@ -155,13 +143,15 @@ export default function RequestPage() {
         }
     };
 
-    const sections = blockData?.grouped ? Object.keys(blockData.grouped) : [];
-    const largeBlocks = selectedSection && blockData?.grouped[selectedSection]
-        ? Object.keys(blockData.grouped[selectedSection])
-        : [];
-    const mediumBlocks = selectedSection && selectedLargeBlock && blockData?.grouped[selectedSection]?.[selectedLargeBlock]
-        ? blockData.grouped[selectedSection][selectedLargeBlock]
-        : [];
+    // Get all unique block names from blockData
+    const allBlocks: string[] = [];
+    if (blockData?.grouped) {
+        Object.values(blockData.grouped).forEach(sections => {
+            Object.values(sections).forEach(blocks => {
+                allBlocks.push(...blocks);
+            });
+        });
+    }
 
     return (
         <div className="container">
@@ -188,17 +178,6 @@ export default function RequestPage() {
             <form onSubmit={handleSubmit}>
                 <div className="card" style={{ border: '2px solid var(--color-input-border)' }}>
 
-                    {/* New Field: Person in Charge */}
-                    <div className="form-group">
-                        <label htmlFor="personInCharge">名前（担当者名）</label>
-                        <input
-                            id="personInCharge"
-                            type="text"
-                            value={personInCharge}
-                            onChange={(e) => setPersonInCharge(e.target.value)}
-                            placeholder="山田 太郎"
-                        />
-                    </div>
 
                     <div className="form-group">
                         <label>
@@ -242,66 +221,21 @@ export default function RequestPage() {
                             </div>
 
                             {selectedShipId && blockData && (
-                                <>
-                                    <div className="form-row">
-                                        <div className="form-group">
-                                            <label htmlFor="section">区画</label>
-                                            <select
-                                                id="section"
-                                                value={selectedSection}
-                                                onChange={(e) => {
-                                                    setSelectedSection(e.target.value);
-                                                    setSelectedLargeBlock('');
-                                                    setSelectedMediumBlock('');
-                                                }}
-                                            >
-                                                <option value="">選択してください</option>
-                                                {sections.map((section) => (
-                                                    <option key={section} value={section}>
-                                                        {section}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label htmlFor="largeBlock">大組</label>
-                                            <select
-                                                id="largeBlock"
-                                                value={selectedLargeBlock}
-                                                onChange={(e) => {
-                                                    setSelectedLargeBlock(e.target.value);
-                                                    setSelectedMediumBlock('');
-                                                }}
-                                                disabled={!selectedSection}
-                                            >
-                                                <option value="">選択してください</option>
-                                                {largeBlocks.map((block) => (
-                                                    <option key={block} value={block}>
-                                                        {block}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-
-                                        <div className="form-group">
-                                            <label htmlFor="mediumBlock">中組</label>
-                                            <select
-                                                id="mediumBlock"
-                                                value={selectedMediumBlock}
-                                                onChange={(e) => setSelectedMediumBlock(e.target.value)}
-                                                disabled={!selectedLargeBlock}
-                                            >
-                                                <option value="">選択してください</option>
-                                                {mediumBlocks.map((block) => (
-                                                    <option key={block} value={block}>
-                                                        {block}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    </div>
-                                </>
+                                <div className="form-group">
+                                    <label htmlFor="block">ブロック</label>
+                                    <select
+                                        id="block"
+                                        value={selectedBlock}
+                                        onChange={(e) => setSelectedBlock(e.target.value)}
+                                    >
+                                        <option value="">選択してください</option>
+                                        {allBlocks.map((block, idx) => (
+                                            <option key={idx} value={block}>
+                                                {block}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             )}
                         </>
                     )}
@@ -392,12 +326,9 @@ export default function RequestPage() {
                             type="button"
                             className="secondary"
                             onClick={() => {
-                                setPersonInCharge('');
                                 setFreeFormTitle('');
                                 setSelectedShipId('');
-                                setSelectedSection('');
-                                setSelectedLargeBlock('');
-                                setSelectedMediumBlock('');
+                                setSelectedBlock('');
                                 setNotes('');
                             }}
                         >
