@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import '@/styles/schedule-grid.css';
 import TaskDetailModal from '@/components/TaskDetailModal';
+import * as XLSX from 'xlsx';
 
 interface Task {
     id: string;
@@ -136,7 +137,6 @@ export default function ViewPage() {
         sortedTasks.forEach(task => {
             const start = getStartMins(task);
             const end = start + (task.duration || 60);
-
             if (currentCluster.length === 0) {
                 currentCluster.push(task);
                 clusterEnd = end;
@@ -193,6 +193,28 @@ export default function ViewPage() {
         return layoutMap;
     };
 
+    const handleExportExcel = () => {
+        const wb = XLSX.utils.book_new();
+        const header = ['場所', ...timeSlots];
+        const rows = locations.map(loc => {
+            const locTasks = tasks.filter(t => t.location.id === loc.id);
+            const row: string[] = [loc.name];
+            timeSlots.forEach(time => {
+                const taskAtTime = locTasks.find(t => (t.scheduledStartTime || t.requestedTime) === time);
+                if (taskAtTime) {
+                    const display = getTaskDisplay(taskAtTime);
+                    row.push(`(${display.shipNumber}) ${display.section} ${display.blockName}`);
+                } else {
+                    row.push('');
+                }
+            });
+            return row;
+        });
+        const ws = XLSX.utils.aoa_to_sheet([header, ...rows]);
+        XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
+        XLSX.writeFile(wb, `Dejihai_Schedule_${selectedDate}.xlsx`);
+    };
+
     return (
         <div className="container">
             <nav className="nav" style={{ backgroundColor: 'var(--color-view-bg)', borderColor: 'var(--color-view-border)' }}>
@@ -235,6 +257,9 @@ export default function ViewPage() {
                 </label>
 
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 'var(--spacing-sm)' }}>
+                    <button onClick={handleExportExcel} style={{ backgroundColor: '#27ae60' }}>
+                        📊 Excel保存
+                    </button>
                     <button onClick={() => window.print()} style={{ backgroundColor: 'var(--color-accent-primary)' }}>
                         🖨️ PDFで保存/印刷
                     </button>

@@ -133,6 +133,8 @@ export default function RequestPage() {
             setSelectedLargeBlock('');
             setSelectedMediumBlock('');
             setNotes('');
+            setLocationId(''); // 追加
+            setRequestedTime(''); // 追加
 
             // 続けて入力しない場合は、トップへ戻すか、メッセージを維持する
             if (!keepInputting) {

@@ -14,6 +14,8 @@ import {
     PointerSensor,
     closestCenter,
     DragOverEvent,
+    useDraggable,
+    useDroppable,
 } from '@dnd-kit/core';
 
 interface Task {
@@ -411,6 +413,88 @@ export default function SchedulePage() {
 
     const activeTask = activeId ? tasks.find(t => t.id === activeId) : null;
 
+    // --- Sub-components for DnD ---
+
+    function DroppableTimeCell({ id, i, isOver }: any) {
+        const { setNodeRef } = useDroppable({ id });
+        return (
+            <div
+                ref={setNodeRef}
+                className={`time-cell ${isOver ? 'droppable' : ''}`}
+                style={{
+                    gridColumn: i + 2,
+                    gridRow: 1,
+                    height: '100%',
+                    borderRight: '1px solid var(--color-border)',
+                    position: 'relative',
+                    zIndex: 1
+                }}
+            >
+                {isOver && !activeTask && <div className="drop-placeholder">ここに移動</div>}
+            </div>
+        );
+    }
+
+    function DraggableTaskCard({ task, layout, display }: any) {
+        const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+            id: task.id,
+        });
+
+        const colStart = getGridColumnStart(task.scheduledStartTime || task.requestedTime);
+        const colSpan = getGridColumnSpan(task.duration || 60);
+
+        const style = {
+            gridColumn: `${colStart} / span ${colSpan}`,
+            gridRow: 1,
+            zIndex: 10 + layout.index,
+            top: `${layout.index * 85}px`,
+            height: `80px`,
+            width: 'calc(100% - 8px)',
+            margin: '2px 4px',
+            position: 'absolute' as const,
+            transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
+            opacity: isDragging ? 0 : 1, // Hide original while dragging
+        };
+
+        return (
+            <div
+                ref={setNodeRef}
+                style={style}
+                {...listeners}
+                {...attributes}
+                className={`task-card ${task.status.toLowerCase()} ${layout.conflict ? 'conflict' : ''}`}
+                onClick={(e) => {
+                    e.stopPropagation();
+                    if (!resizing) setSelectedTask(task);
+                }}
+                onContextMenu={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleAddSpecialStatus(task.id, '㊏');
+                }}
+            >
+                <div className="task-card-header" style={{ fontSize: '12px', pointerEvents: 'none' }}>
+                    <div style={{ fontWeight: 700, display: 'flex', flexWrap: 'wrap', gap: '2px', overflow: 'hidden' }}>
+                        {task.specialStatus && (
+                            <span className="task-card-special-status" style={{ fontSize: '14px' }}>{task.specialStatus}</span>
+                        )}
+                        <span style={{ color: '#ffd700' }}>{display.shipNumber && `(${display.shipNumber})`}</span>
+                        <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '0 4px', borderRadius: '2px' }}>{display.section}</span>
+                        <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{display.blockName}</span>
+                    </div>
+                    <div style={{ fontSize: '10px', opacity: 0.8 }}>{display.person}</div>
+                </div>
+                <div
+                    className="task-card-resize-handle"
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                        handleResizeStart(e, task.id);
+                    }}
+                />
+            </div>
+        );
+    }
+
     return (
         <div className="container">
             <nav className="nav">
@@ -503,79 +587,29 @@ export default function SchedulePage() {
                                     {timeSlots.map((time, i) => {
                                         const cellId = `${location.id}_${time}`;
                                         const isOver = overId === cellId;
-
                                         return (
-                                            <div
+                                            <DroppableTimeCell
                                                 key={cellId}
                                                 id={cellId}
-                                                className={`time-cell ${isOver ? 'droppable' : ''}`}
-                                                style={{
-                                                    gridColumn: i + 2,
-                                                    gridRow: 1,
-                                                    height: '100px',
-                                                    borderRight: '1px solid var(--color-border)',
-                                                    position: 'relative',
-                                                    zIndex: 1
-                                                }}
-                                            >
-                                                {isOver && !activeTask && <div className="drop-placeholder">Drop</div>}
-                                            </div>
+                                                i={i}
+                                                isOver={isOver}
+                                            />
                                         );
                                     })}
 
                                     {/* Task Cards Layered on Top */}
-                                    {locationTasks
-                                        .map(task => {
-                                            const colStart = getGridColumnStart(task.scheduledStartTime || task.requestedTime);
-                                            const colSpan = getGridColumnSpan(task.duration || 60);
-                                            const isDragging = activeId === task.id;
-                                            const display = getTaskDisplay(task);
-
-                                            const layout = layoutMap.get(task.id) || { index: 0, total: 1, conflict: false };
-                                            const heightPercent = 100 / layout.total;
-                                            const topPercent = heightPercent * layout.index;
-
-                                            if (isDragging) return null; // Hide original while dragging
-
-                                            return (
-                                                <div
-                                                    key={task.id}
-                                                    id={task.id}
-                                                    className={`task-card ${task.status.toLowerCase()} ${layout.conflict ? 'conflict' : ''}`}
-                                                    style={{
-                                                        gridColumn: `${colStart} / span ${colSpan}`,
-                                                        gridRow: 1,
-                                                        zIndex: 10 + layout.index,
-                                                        top: `${layout.index * 85}px`, // 固定高さで上下に並べる
-                                                        height: `80px`,
-                                                        width: 'calc(100% - 8px)',
-                                                        margin: '2px 4px',
-                                                        cursor: 'grab',
-                                                        position: 'absolute',
-                                                    }}
-                                                    onClick={(e) => {
-                                                        if (!resizing) setSelectedTask(task);
-                                                    }}
-                                                    onContextMenu={(e) => {
-                                                        e.preventDefault();
-                                                        handleAddSpecialStatus(task.id, '㊏');
-                                                    }}
-                                                >
-                                                    <div className="task-card-header" style={{ fontSize: '12px' }}>
-                                                        <div style={{ fontWeight: 700, display: 'flex', flexWrap: 'wrap', gap: '2px', overflow: 'hidden' }}>
-                                                            {task.specialStatus && (
-                                                                <span className="task-card-special-status" style={{ fontSize: '14px' }}>{task.specialStatus}</span>
-                                                            )}
-                                                            <span style={{ color: '#ffd700' }}>{display.shipNumber && `(${display.shipNumber})`}</span>
-                                                            <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '0 4px', borderRadius: '2px' }}>{display.section}</span>
-                                                            <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{display.blockName}</span>
-                                                        </div>
-                                                        <div style={{ fontSize: '10px', opacity: 0.8 }}>{display.person}</div>
-                                                    </div>
-                                                    <div className="task-card-resize-handle" onMouseDown={(e) => handleResizeStart(e, task.id)} />
-                                                </div>
-                                            );
-                                        })}
+                                    {locationTasks.map(task => {
+                                        const display = getTaskDisplay(task);
+                                        const layout = layoutMap.get(task.id) || { index: 0, total: 1, conflict: false };
+                                        return (
+                                            <DraggableTaskCard
+                                                key={task.id}
+                                                task={task}
+                                                layout={layout}
+                                                display={display}
+                                            />
+                                        );
+                                    })}
                                 </div>
                             );
                         })}

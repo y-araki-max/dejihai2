@@ -15,6 +15,8 @@
     min-width: max-content;
     border: 1px solid var(--color-border);
     background-color: var(--color-bg-primary);
+    border-top: 2px solid var(--color-border);
+    border-left: 2px solid var(--color-border);
 }
 
 /* Grid Layout is now handled inline in page.tsx for dynamic columns */
@@ -27,6 +29,7 @@
     text-align: center;
     border-bottom: 2px solid var(--color-border);
     border-right: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border);
     background-color: var(--color-bg-tertiary);
     font-weight: 600;
     color: var(--color-text-secondary);
@@ -49,8 +52,9 @@
     left: 0;
     z-index: 30;
     background-color: var(--color-bg-tertiary);
-    border-right: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
+    border-right: 2px solid var(--color-border);
+    border-bottom: 2px solid var(--color-border);
+    border-left: 1px solid var(--color-border);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,6 +66,7 @@
     /* Dimensions handled in Grid */
     background-color: var(--color-bg-primary);
     border-right: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
     height: 100%;
     min-height: 100px;
     padding: var(--spacing-xs);
@@ -110,6 +115,8 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
 
 .task-card:hover {
