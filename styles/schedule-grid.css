@@ -36,7 +36,12 @@
 }
 
 .schedule-row {
-    display: contents;
+    display: grid;
+    grid-template-columns: 150px repeat(25, 100px);
+    border-bottom: 2px solid var(--color-border);
+    position: relative;
+    min-height: 100px;
+    background-color: var(--color-bg-primary);
 }
 
 .location-cell {
@@ -56,10 +61,12 @@
 .time-cell {
     /* Dimensions handled in Grid */
     background-color: var(--color-bg-primary);
-    border: 1px solid var(--color-border);
+    border-right: 1px solid var(--color-border);
+    height: 100%;
     min-height: 100px;
     padding: var(--spacing-xs);
     position: relative;
+    z-index: 1;
     transition: background-color 0.2s ease;
 }
 
@@ -95,13 +102,12 @@
     border: 2px solid var(--color-accent-primary);
     border-radius: var(--radius-sm);
     padding: var(--spacing-sm);
-    margin: 2px;
     cursor: grab;
     font-size: 14px;
     color: var(--color-text-primary);
-    position: relative;
+    position: absolute;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
-    overflow: visible;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
 }

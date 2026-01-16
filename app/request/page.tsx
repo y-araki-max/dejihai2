@@ -25,6 +25,7 @@ export default function RequestPage() {
     const [selectedShipId, setSelectedShipId] = useState('');
     const [blockData, setBlockData] = useState<BlockData | null>(null);
     const [isFreeForm, setIsFreeForm] = useState(false);
+    const [keepInputting, setKeepInputting] = useState(false); // 続けて入力するかどうか
 
     // Form fields
     const [personInCharge, setPersonInCharge] = useState(''); // New field
@@ -125,14 +126,22 @@ export default function RequestPage() {
 
             setMessage({ type: 'success', text: '依頼を登録しました' });
 
-            // Reset form (keep Person in Charge for convenience?) -> Maybe better to clear.
-            setPersonInCharge('');
+            // フォームのリセット
             setFreeFormTitle('');
-            setSelectedShipId(''); // Reset ship selection
+            setSelectedShipId('');
             setSelectedSection('');
             setSelectedLargeBlock('');
             setSelectedMediumBlock('');
             setNotes('');
+
+            // 続けて入力しない場合は、トップへ戻すか、メッセージを維持する
+            if (!keepInputting) {
+                // 必要に応じて自動で一覧へ戻すなどの処理が可能ですが、
+                // 今回はシンプルにリセットのみ行います
+            } else {
+                // 続けて入力する場合は、メッセージを3秒後に消す
+                setTimeout(() => setMessage(null), 3000);
+            }
 
         } catch (error) {
             console.error('Error creating task:', error);
@@ -357,6 +366,18 @@ export default function RequestPage() {
                         <p className="text-muted" style={{ fontSize: '14px', marginTop: 'var(--spacing-xs)' }}>
                             作業の詳細（小物、ガーター、板継など）を記入してください
                         </p>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 'var(--spacing-lg)' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                            <input
+                                type="checkbox"
+                                checked={keepInputting}
+                                onChange={(e) => setKeepInputting(e.target.checked)}
+                                style={{ width: '24px', height: '24px', marginRight: 'var(--spacing-sm)' }}
+                            />
+                            <strong>続けて別の依頼を入力しますか？</strong>
+                        </label>
                     </div>
 
                     <div style={{ display: 'flex', gap: 'var(--spacing-md)', marginTop: 'var(--spacing-lg)' }}>

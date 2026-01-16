@@ -302,10 +302,14 @@ export default function SchedulePage() {
 
     const getTaskDisplay = (task: Task) => {
         const shipNumber = task.ship?.shipNumber ? task.ship.shipNumber.replace('S', '') : '';
-        const blockName = task.blockInfo?.split(' - ').pop() || task.freeFormTitle || '';
+        const blockParts = task.blockInfo ? task.blockInfo.split(' - ') : [];
+        // [Ship, Section, LargeBlock, MediumBlock]
+        const section = blockParts[1] || '';
+        const blockName = blockParts[blockParts.length - 1] || task.freeFormTitle || '';
         const person = task.personInCharge || '';
         return {
             shipNumber,
+            section,
             blockName,
             person,
         };
@@ -485,7 +489,9 @@ export default function SchedulePage() {
                                         display: 'grid',
                                         gridTemplateColumns: '150px repeat(25, 100px)',
                                         borderBottom: '1px solid var(--color-border)',
-                                        position: 'relative' // Context for contained absolutes if any
+                                        position: 'relative',
+                                        minHeight: '100px',
+                                        height: `${Math.max(1, Array.from(layoutMap.values()).reduce((max, l) => Math.max(max, l.total), 0)) * 85 + 10}px`
                                     }}
                                 >
                                     {/* Location Header */}
@@ -540,13 +546,12 @@ export default function SchedulePage() {
                                                         gridColumn: `${colStart} / span ${colSpan}`,
                                                         gridRow: 1,
                                                         zIndex: 10 + layout.index,
-                                                        marginTop: `${topPercent}%`,
-                                                        height: `calc(${heightPercent}% - 4px)`, // Subtract margin
-                                                        width: 'calc(100% - 8px)', // Fit within span
+                                                        top: `${layout.index * 85}px`, // 固定高さで上下に並べる
+                                                        height: `80px`,
+                                                        width: 'calc(100% - 8px)',
                                                         margin: '2px 4px',
                                                         cursor: 'grab',
                                                         position: 'absolute',
-                                                        alignSelf: 'start'
                                                     }}
                                                     onClick={(e) => {
                                                         if (!resizing) setSelectedTask(task);
@@ -556,15 +561,16 @@ export default function SchedulePage() {
                                                         handleAddSpecialStatus(task.id, '㊏');
                                                     }}
                                                 >
-                                                    <div className="task-card-header" style={{ fontSize: layout.total > 2 ? '12px' : '14px' }}>
-                                                        {task.specialStatus && (
-                                                            <span className="task-card-special-status" style={{ fontSize: layout.total > 2 ? '12px' : '16px' }}>{task.specialStatus}</span>
-                                                        )}
-                                                        <div style={{ fontWeight: 700, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                                                            {/* Schedule Screen: Name + Ship */}
-                                                            <span style={{ fontSize: '0.9em', fontWeight: 600 }}>{display.person}</span>
-                                                            <span style={{ color: '#ffd700', fontSize: '1.1em' }}>{display.shipNumber && `(${display.shipNumber})`}</span>
+                                                    <div className="task-card-header" style={{ fontSize: '12px' }}>
+                                                        <div style={{ fontWeight: 700, display: 'flex', flexWrap: 'wrap', gap: '2px', overflow: 'hidden' }}>
+                                                            {task.specialStatus && (
+                                                                <span className="task-card-special-status" style={{ fontSize: '14px' }}>{task.specialStatus}</span>
+                                                            )}
+                                                            <span style={{ color: '#ffd700' }}>{display.shipNumber && `(${display.shipNumber})`}</span>
+                                                            <span style={{ backgroundColor: 'rgba(255,255,255,0.2)', padding: '0 4px', borderRadius: '2px' }}>{display.section}</span>
+                                                            <span style={{ whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>{display.blockName}</span>
                                                         </div>
+                                                        <div style={{ fontSize: '10px', opacity: 0.8 }}>{display.person}</div>
                                                     </div>
                                                     <div className="task-card-resize-handle" onMouseDown={(e) => handleResizeStart(e, task.id)} />
                                                 </div>
