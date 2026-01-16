@@ -229,7 +229,7 @@ export default function ViewPage() {
             </nav>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-md)', marginBottom: 'var(--spacing-lg)' }}>
-                <h1 style={{ margin: 0 }}>👁️ スケジュール閲覧 (最新)</h1>
+                <h1 style={{ margin: 0 }}>👁️ スケジュール閲覧</h1>
                 <span style={{
                     backgroundColor: 'var(--color-success)',
                     color: 'white',

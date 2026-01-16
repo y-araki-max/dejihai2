@@ -3,7 +3,7 @@ import Link from 'next/link';
 export default function HomePage() {
     return (
         <div className="container">
-            <h1 className="text-center">配材スケジュール管理システム (Updated)</h1>
+            <h1 className="text-center">配材スケジュール管理システム</h1>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginTop: '3rem' }}>
                 <Link href="/request" style={{ textDecoration: 'none' }}>
