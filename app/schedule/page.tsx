@@ -453,7 +453,8 @@ export default function SchedulePage() {
             gridColumn: `${colStart} / span ${colSpan}`,
             gridRow: 1,
             zIndex: 10 + layout.index,
-            top: `${layout.index * 85}px`,
+            // Dynamic top with padding: 10px + index * 100px (increased lane height)
+            top: `${10 + layout.index * 100}px`,
             height: `80px`,
             width: 'calc(100% - 8px)',
             margin: '2px 4px',
@@ -582,8 +583,9 @@ export default function SchedulePage() {
                                         gridTemplateColumns: '150px repeat(25, 100px)',
                                         borderBottom: '1px solid var(--color-border)',
                                         position: 'relative',
-                                        minHeight: '100px',
-                                        height: `${Math.max(1, Array.from(layoutMap.values()).reduce((max, l) => Math.max(max, l.total), 0)) * 85 + 10}px`
+                                        minHeight: '120px', // Min height for 1 lane (100 + 20)
+                                        // Dynamic Height: Max lanes * 100px + 20px padding (covers top 10px + bottom 10px implied)
+                                        height: `${Math.max(1, Array.from(layoutMap.values()).reduce((max, l) => Math.max(max, l.total), 0)) * 100 + 20}px`
                                     }}
                                 >
                                     {/* Location Header */}
