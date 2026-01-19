@@ -190,10 +190,12 @@
     right: 0;
     width: 30px;
     height: 30px;
-    cursor: ns-resize;
+    cursor: ew-resize;
     background: linear-gradient(135deg, transparent 50%, rgba(255, 255, 255, 0.5) 50%);
     border-top-left-radius: 4px;
     transition: background 0.2s ease;
+    z-index: 100;
+    /* Ensure it's above the card content */
 }
 
 .task-card-resize-handle:hover {

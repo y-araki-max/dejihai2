@@ -207,9 +207,10 @@ export default function SchedulePage() {
     };
 
     // Horizontal Resize Handlers
-    const handleResizeStart = (e: React.MouseEvent, taskId: string) => {
+    const handleResizeStart = (e: React.MouseEvent | React.PointerEvent, taskId: string) => {
+        // Stop propagation immediately
         e.stopPropagation();
-        e.preventDefault();
+
         const task = tasks.find(t => t.id === taskId);
         if (!task) return;
 
@@ -490,11 +491,13 @@ export default function SchedulePage() {
                 </div>
                 <div
                     className="task-card-resize-handle"
-                    onMouseDown={(e) => {
+                    onPointerDown={(e) => {
                         e.stopPropagation();
-                        e.preventDefault(); // Prevent drag start interference
+                        // Prevent dnd-kit from starting a drag
+                        e.preventDefault();
                         handleResizeStart(e, task.id);
                     }}
+                    data-no-dnd="true"
                 />
             </div>
         );
