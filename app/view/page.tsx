@@ -302,8 +302,8 @@ export default function ViewPage() {
                                     gridTemplateColumns: '150px repeat(25, 100px)',
                                     borderBottom: '1px solid var(--color-border)',
                                     position: 'relative',
-                                    minHeight: '100px',
-                                    height: `${Math.max(1, Array.from(layoutMap.values()).reduce((max, l) => Math.max(max, l.total), 0)) * 85 + 10}px`
+                                    minHeight: '120px',
+                                    height: `${Math.max(1, Array.from(layoutMap.values()).reduce((max, l) => Math.max(max, l.total), 0)) * 100 + 20}px`
                                 }}
                             >
                                 <div className="location-cell" style={{ gridColumn: 1, gridRow: 1 }}>{location.name}</div>
@@ -316,7 +316,7 @@ export default function ViewPage() {
                                         style={{
                                             gridColumn: i + 2,
                                             gridRow: 1,
-                                            height: '100px',
+                                            height: '100%', // Match parent row height
                                             borderRight: '1px solid var(--color-border)',
                                             position: 'relative',
                                             zIndex: 1
@@ -344,7 +344,7 @@ export default function ViewPage() {
                                                     gridColumn: `${colStart} / span ${colSpan}`,
                                                     gridRow: 1,
                                                     zIndex: 10 + layout.index,
-                                                    top: `${layout.index * 85}px`,
+                                                    top: `${10 + layout.index * 100}px`, // Dynamic top with 10px padding
                                                     height: `80px`,
                                                     width: 'calc(100% - 8px)',
                                                     margin: '2px 4px',
