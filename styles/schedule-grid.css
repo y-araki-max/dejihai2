@@ -15,8 +15,8 @@
     min-width: max-content;
     border: 1px solid var(--color-border);
     background-color: var(--color-bg-primary);
-    border-top: 2px solid var(--color-border);
-    border-left: 2px solid var(--color-border);
+    border-top: 2px solid #95a5a6;
+    border-left: 2px solid #95a5a6;
 }
 
 /* Grid Layout is now handled inline in page.tsx for dynamic columns */
@@ -65,8 +65,8 @@
 .time-cell {
     /* Dimensions handled in Grid */
     background-color: var(--color-bg-primary);
-    border-right: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
+    border-right: 1px solid #bdc3c7;
+    border-bottom: 1px solid #bdc3c7;
     height: 100%;
     min-height: 100px;
     padding: var(--spacing-xs);

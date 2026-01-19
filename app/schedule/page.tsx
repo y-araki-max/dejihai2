@@ -19,6 +19,7 @@ import {
     useDraggable,
     useDroppable,
 } from '@dnd-kit/core';
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers';
 
 interface Task {
     id: string;
@@ -231,9 +232,10 @@ export default function SchedulePage() {
             const newDuration = Math.max(30, resizing.startDuration + deltaMinutes);
 
             // Optimistic update for visual feedback
+            // Optimistic update for visual feedback
             setTasks(prev => prev.map(t =>
                 t.id === resizing.taskId
-                    ? { ...t, duration: newDuration }
+                    ? { ...t, duration: newDuration, status: t.status } // Ensure status is preserved
                     : t
             ));
         };
@@ -296,11 +298,14 @@ export default function SchedulePage() {
     }
 
     // Grid Helper Functions
+    // Grid Helper Functions
     const getGridColumnStart = (timeStr: string) => {
         const [h, m] = timeStr.split(':').map(Number);
         // 7:00 is col 2 (col 1 is location)
         // (h - 7) * 2 + (m/30) + 2
-        return (h - 7) * 2 + (m === 30 ? 1 : 0) + 2;
+        // Snap to nearest 30 mins (100px)
+        const remainder = (h - 7) * 2 + (m === 30 ? 1 : 0) + 2;
+        return remainder;
     };
 
     const getGridColumnSpan = (duration: number) => {
@@ -487,6 +492,7 @@ export default function SchedulePage() {
                     className="task-card-resize-handle"
                     onMouseDown={(e) => {
                         e.stopPropagation();
+                        e.preventDefault(); // Prevent drag start interference
                         handleResizeStart(e, task.id);
                     }}
                 />
